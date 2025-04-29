@@ -1,8 +1,10 @@
 import {
   Body,
   Controller,
+  Get,
   Logger,
   Post,
+  Query,
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
@@ -12,10 +14,10 @@ import {
   Transport,
 } from '@nestjs/microservices';
 import { CreateCategoryDto } from './dtos/create-category.dto';
-import { tap } from 'rxjs';
+import { lastValueFrom, Observable, Subscription } from 'rxjs';
 
 @UsePipes(ValidationPipe)
-@Controller('api/v1')
+@Controller('api/v1/categories')
 export class AppController {
   private logger = new Logger(AppController.name);
 
@@ -31,8 +33,8 @@ export class AppController {
     });
   }
 
-  @Post('categories')
-  createCategory(@Body() createCategoryDto: CreateCategoryDto) {
+  @Post('')
+  createCategory(@Body() createCategoryDto: CreateCategoryDto): void {
     this.clientAdminBackend
       .emit('create-category', createCategoryDto)
       .pipe()
@@ -46,5 +48,14 @@ export class AppController {
           this.logger.error(`Erro ao criar categoria: ${error}`);
         },
       });
+  }
+
+  @Get('')
+  async getCategories(@Query('_id') _id: string): Promise<any> {
+    const resp:any = await lastValueFrom(
+      this.clientAdminBackend.send('get-categories', { _id }),
+    );
+
+    return resp;
   }
 }
